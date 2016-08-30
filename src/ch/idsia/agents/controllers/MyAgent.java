@@ -20,9 +20,18 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 		return enemies[row][col] != 0;
 	}
 
-	// Is (row, col) empty?   
+	// Is (row, col) empty?  
+	//Considers coins empty spaces now-as long as enemy is not on it
 	public boolean isEmpty(int row, int col) {
-		return (levelScene[row][col] == 0);
+		if(levelScene[row][col] == 0){
+			return true;
+		}
+		else if(levelScene[row][col] == 2 && !hasEnemy(row,col)){
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 
 
@@ -52,91 +61,65 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 	// Actually perform an action by setting a slot in the action array to be true
 	public boolean[] getAction()
 	{
+
 		action[Mario.KEY_LEFT] = false;
 		action[Mario.KEY_RIGHT] = false;
-		action[Mario.KEY_JUMP] = !isMarioAbleToJump && !isMarioOnGround;
-		if(detectEnemy()){
-//			System.out.println("Enemy detected");
-			printObservation();
-			return action;
+		action[Mario.KEY_SPEED] = false;
+		action[Mario.KEY_DOWN] = false;
+		//Mario on ground and enemy/ block in front-cannot drop
+		if(needsJump() && isMarioOnGround && !safeToDrop()){
+			action[Mario.KEY_SPEED] = true;
+			action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
+			action[Mario.KEY_RIGHT] = true;
 		}
-		else if(detectGap()){
-//			System.out.println("Blocks");
-			printObservation();
-			return action;
+		//Mario is on ground-enemies above/in front; can drop down
+		else if(needsJump() && safeToDrop() && isMarioOnGround){
+			action[Mario.KEY_JUMP] = !isMarioOnGround;
+			action[Mario.KEY_SPEED] = true;
+			action[Mario.KEY_RIGHT] = true;
 		}
-		
-//		action[Mario.KEY_LEFT] = false;
-//		action[Mario.KEY_RIGHT] = false;
-//		action[Mario.KEY_JUMP] = !isMarioAbleToJump && !isMarioOnGround;
-//		if((lookForward() && lookUp())){
-//			action[Mario.KEY_LEFT] = true;
-//		}
-//		else if (!isEmpty(8,9) && !isEmpty(9,10)){
-//			action[Mario.KEY_LEFT] = true;
-//		}
-//		else if(lookForward()){
-//			action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
-//			action[Mario.KEY_RIGHT] = true;
-//		}
+		//Mario is in the process of jumping-extend jump because of enemies below
+		else if(!isMarioOnGround && !safeToDrop()){
+			action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
+			action[Mario.KEY_RIGHT] = true;
+			action[Mario.KEY_SPEED] = true;
+		}
+		//Mario is in air and enemies approaching-Just drop down-try to avoid enemies
+		else if(!isMarioOnGround && needsJump() && safeToDrop()){
+			action[Mario.KEY_DOWN] = true;
+		}
+		//All clear condition
 		else{
 			action[Mario.KEY_RIGHT] = true;
 		}
 		printObservation();
-		System.out.println();
-		System.out.println(action[Mario.KEY_LEFT]+ " "+ action[Mario.KEY_JUMP]+ " "
-		+action[Mario.KEY_RIGHT]+" "+  isMarioAbleToJump+ " "+isMarioOnGround);
-		System.out.println();
 		return action;
 	}
-	
-//	private boolean lookForward(){
-//		
-//		for(int i = 10; i < 13; i++){
-//			if(isEmpty(9, i)){
-//				return true;
-//			}
-//		}	
-//		return false;
-//	}
-//	
-//	private boolean lookUp(){
-//		
-//		for(int i = 6; i < 8; i++){
-//			for(int j = 9; j < 12; j++){
-//				if(hasEnemy(i, j)){
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
-//	}
-	
-	private boolean detectEnemy(){
-		for(int i = 10; i < 13; i++){
-			if(hasEnemy(9,i)){
-				action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
-				action[Mario.KEY_RIGHT] = true;
-				return true;
+	//Check for obstacles/ enemies in a box in front of mario
+	private boolean needsJump(){
+
+		for(int i = 10; i < 15; i++){
+			for(int j = 9; j > 6; j--){
+				if(!isEmpty(j, i)){
+					return true;
+				}
 			}
-		}
-//		//Trying to catch enemies above
-//		for(int i = 4; i < 10; i++){
-//			for(int j = 11; j < 15; j++){
-//				if(hasEnemy(i,j)){
-//					action[Mario.KEY_RIGHT] = true;
-//					return true;
-//				}
-//			}
-//		}
-		
+		}	
 		return false;
 	}
-	
-	private boolean detectGap(){
-		if(!isEmpty(9,10) || isEmpty(10,10)){
-			action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
-			action[Mario.KEY_RIGHT] = true;
+	//See if Mario can drop down safely
+	private boolean safeToDrop(){
+
+		if(isEmpty(10,10)){
+			for(int i = 11; i < 19; i++){
+				if(!isEmpty(i,10)){
+					for(int j = 11; j < 15; j++){
+						if(hasEnemy(i, j)){
+							return false;
+						}
+					}
+				}
+			}
 			return true;
 		}
 		return false;
