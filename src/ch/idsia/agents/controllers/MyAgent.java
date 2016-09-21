@@ -4,7 +4,12 @@ package ch.idsia.agents.controllers;
 import ch.idsia.agents.Agent;
 import ch.idsia.benchmark.mario.engine.sprites.Mario;
 import ch.idsia.benchmark.mario.environments.Environment;
-
+/**
+ * 
+ * @author Winston
+ *My version of the Mario Agent
+ *Does several checks about the blocks in front, above and below the character to make decisions about what to do next
+ */
 
 public class MyAgent extends BasicMarioAIAgent implements Agent
 {
@@ -95,7 +100,11 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 		printObservation();
 		return action;
 	}
-	//Check for obstacles/ enemies in a box in front of mario
+	/**
+	 * Description: Uses isEmpty method to see if blocks in front of Mario have enemies or obstacles
+	 * @param none
+	 * @return boolean
+	 */
 	private boolean needsJump(){
 
 		for(int i = 10; i < 15; i++){
@@ -107,7 +116,12 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 		}	
 		return false;
 	}
-	//See if Mario can drop down safely
+	/**
+	 * Description: Uses isEmpty method to see if blocks in front and below Mario to see if Mario can keep running forward
+	 * and drop down
+	 * @param none
+	 * @return boolean
+	 */
 	private boolean safeToDrop(){
 
 		if(isEmpty(10,10)){
